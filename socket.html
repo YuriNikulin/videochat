@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<link rel="stylesheet" href="css/normalize.css">
+	<link rel="stylesheet" href="css/tools.css">
+	<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+	<div class="main-content">
+		<div class="container">
+			<div class="toolbar">
+				<a href="" class="btn btn--create-room-opener toolbar__btn js js--create-room-opener ui">
+					Create a new room
+				</a>
+				<a href="" class="btn btn--find-room-opener toolbar__btn js js--call-room-opener ui">
+					Call to a room
+				</a>
+				<div class="toolbar-input toolbar-popup toolbar-create-room hidden popup create-room">
+					<input type="text" class="toolbar-input__input input create-room__input" placeholder="Your Room's name goes here">
+					<button class="toolbar__btn btn btn--create-room js--create-room ui">
+						Create
+					</button>
+					<a class="toolbar__btn js--popup-closer icon popup__close ui">
+						Close
+					</a>
+				</div>
+				<div class="toolbar-input toolbar-popup toolbar-call-room hidden popup call-room">
+					<input type="text" class="toolbar-input__input input call-room__input" placeholder="Enter room's name">
+					<button class="toolbar__btn btn btn--call-room js--call-room ui">
+						Call
+					</button>
+					<a class="toolbar__btn js--popup-closer icon popup__close ui">
+						Close
+					</a>
+				</div>
+			</div>
+			<div class="rooms">
+			</div>
+		</div>
+	</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+<script src="/js/script.js"></script>
+<script src="/js/ui.js"></script>
+	<script>
+		$(function() {
+			var socket = io();
+			$('form').submit(function() {
+				socket.emit('chat message', $('#m').val());
+				$('#m').val('');
+				return false;
+			});
+			socket.on('chat message', function(msg) {
+				$('#messages').append($('<li>').text(msg));
+			});
+		});
+	</script>	
+</body>
+</html>

@@ -8,6 +8,8 @@ var pc;
 var remoteStream;
 var turnReady;
 
+var roomName = document.cookie.match( /room=(.*)/)[1];
+
 var pcConfig = {
   'iceServers': [{
     'urls': 'stun:stun.l.google.com:19302'
@@ -17,7 +19,7 @@ var pcConfig = {
 
 // Set up audio and video regardless of what devices are present.
 var sdpConstraints = {
-  offerToReceiveAudio: false,
+  offerToReceiveAudio: true,
   offerToReceiveVideo: true
 };
 
@@ -27,9 +29,7 @@ console.log(sdpConstraints.offerToReceiveAudio);
 var room = 'foo';
 // Could prompt for room name:
 // room = prompt('Enter room name:');
-alert('TESTBEFORE???');
 var socket = io.connect();
-alert(socket);
 
 
 if (room !== '') {
@@ -103,7 +103,7 @@ navigator.mediaDevices.getUserMedia({
 })
 .then(gotStream)
 .catch(function(e) {
-  alert('durak ' + e.name);
+  // alert('Error: ' + e.name);
 });
 
 function gotStream(stream) {
