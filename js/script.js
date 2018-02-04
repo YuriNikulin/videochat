@@ -21,6 +21,21 @@ $('.js--popup-closer').on('click', function() {
 	hideElem(($(this)).parents('.popup').first());
 })
 
+function fullHeight() {
+	var container = $('.full-height');
+	var mainContent = $('.header');
+	var browserHeight, mainContentHeight, resultHeight;
+
+	function calculate() {
+		browserHeight = $(window).height();
+		mainContentHeight = mainContent.outerHeight();
+		resultHeight = browserHeight - mainContentHeight;
+		container.css('min-height', resultHeight);
+	}
+	calculate();
+}
+fullHeight();
+
 function redirectToChat() {
 	var oldHref = window.location.href;
 	console.log(document.cookie);
@@ -41,3 +56,4 @@ function createRoom(container) {
 	document.cookie = 'room=' + roomName;
 	redirectToChat();
 }
+

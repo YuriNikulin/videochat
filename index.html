@@ -7,16 +7,14 @@
 	<link rel="stylesheet" href="css/normalize.css">
 	<link rel="stylesheet" href="css/tools.css">
 	<link rel="stylesheet" href="css/main.css">
+	<link rel="stylesheet" href="css/adaptive.css">
 </head>
 <body>
 	<div class="main-content">
-		<div class="container">
+		<div class="container header">
 			<div class="toolbar">
 				<a href="" class="btn btn--create-room-opener toolbar__btn js js--create-room-opener ui">
 					Create a new room
-				</a>
-				<a href="" class="btn btn--find-room-opener toolbar__btn js js--call-room-opener ui">
-					Call to a room
 				</a>
 				<div class="toolbar-input toolbar-popup toolbar-create-room hidden popup create-room">
 					<input type="text" class="toolbar-input__input input create-room__input" placeholder="Your Room's name goes here">
@@ -26,15 +24,9 @@
 					<a class="toolbar__btn js--popup-closer icon popup__close ui">
 						Close
 					</a>
-				</div>
-				<div class="toolbar-input toolbar-popup toolbar-call-room hidden popup call-room">
-					<input type="text" class="toolbar-input__input input call-room__input" placeholder="Enter room's name">
-					<button class="toolbar__btn btn btn--call-room js--call-room ui">
-						Call
-					</button>
-					<a class="toolbar__btn js--popup-closer icon popup__close ui">
-						Close
-					</a>
+					<div class="popup error">
+						If room with entered name exists you will join it. Otherwise room with entered name will be created.
+					</div>
 				</div>
 			</div>
 			<div class="rooms">
@@ -42,7 +34,7 @@
 		</div>
 	</div>
 <script src="/socket.io/socket.io.js"></script>
-<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+<script src="js/lib/jquery.min.js"></script>
 <script src="/js/script.js"></script>
 <script src="/js/ui.js"></script>
 	<script>

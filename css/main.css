@@ -20,13 +20,33 @@
 	}
 }
 
+h1,h2 {
+	margin: 0;
+}
+
 body {
   font-family: sans-serif;
-  padding-top: 100px;
   color: #3A261B;
   font-size: 15px;
-  min-width: 385px;
 }
+
+body.black {
+	background: #000;
+}
+
+.header {
+	padding-top: 15px;
+	padding-bottom: 15px;
+}
+
+.header .toolbar {
+	margin-bottom: 15px;
+}
+
+.header.white {
+	background: #fff;
+}
+
 
 input,
 button,
@@ -71,6 +91,49 @@ input {
 	padding-left: 15px;
 	padding-right: 15px;
 	margin: 0 auto;
+}
+
+.videos-container {
+	background: #000;
+	text-align: center;
+}
+
+.videos-item {
+	position: relative;
+	padding: 20px 0;
+	margin: 0 auto;
+}
+
+.videos__text {
+	font-size: 18px;
+	color: #fff;
+	display: block;
+}
+
+.videos__btn {
+	border: 1px solid #fff;
+	display: inline-block;
+	margin: 10px 0;
+	padding: 5px 15px;
+}
+
+.videos__btn:hover {
+	background: #fff;
+	color: #000;
+}
+
+.videos__text-container {
+	transition: .9s ease-in-out;
+	position: absolute;
+	width: 100%;
+	left: 0;
+	top: 50%;
+	transform: translate(0, -50%);
+	opacity: 0;
+}
+
+.videos__text-container.shown {
+	opacity: 1;
 }
 
 .toolbar {
@@ -119,6 +182,10 @@ input {
 	width: 200px;
 	font-size: 12px;
 	animation: look-at-me .2s linear 1;
+}
+
+.error.pos-relative {
+	position: relative;
 }
 
 .error.shown {

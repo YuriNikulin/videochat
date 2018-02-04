@@ -3,12 +3,16 @@
 var isChannelReady = false;
 var isInitiator = false;
 var isStarted = false;
+var isInitiatorCustom = true;
 var localStream;
 var pc;
 var remoteStream;
 var turnReady;
+var isError = false;
+var isHostAgreed = false;
+var remoteRoomName;
 
-var roomName = document.cookie.match( /room=(.*)/)[1];
+
 
 var pcConfig = {
   'iceServers': [{
@@ -23,19 +27,53 @@ var sdpConstraints = {
   offerToReceiveVideo: true
 };
 
-console.log(sdpConstraints.offerToReceiveAudio);
-/////////////////////////////////////////////
 
-var room = 'foo';
+var room;
+var roomTitle = $('.room-name');
+var roomName = document.cookie.match( /room=(.*)/);
+if (roomName) {
+  roomName = roomName[1];
+  roomTitle.html(roomTitle.html() + ' ' + roomName);
+}
+
+else {
+  isError = true;
+  showLocalError(roomTitle, 'You haven\'t selected a room name, you can return to homepage and choose one in order to create a new room or join existing', 'pos-relative');
+}
+
+room = roomName;
+console.log(room);
 // Could prompt for room name:
 // room = prompt('Enter room name:');
 var socket = io.connect();
 
+socket.emit('main check', room);
 
-if (room !== '') {
+if (room !== '' && !isError) {
   socket.emit('create or join', room);
   console.log('Attempted to create or  join room', room);
 }
+
+socket.on('main check answer', function(remoteRoom) {
+  if (remoteRoom == room) {
+    isStarted = false;
+    isChannelReady = true;
+    var remoteContainer = $('.videos__remote');
+    remoteContainer.find('.videos__text-container').remove();
+    remoteContainer.append('<div class="videos__text-container"><span class="videos__span videos__text">Some user is calling you</span><span class="videos__text ui videos__btn js--accept-call">Accept</span></div>');
+    setTimeout(function() {
+      remoteContainer.find('.videos__text-container').addClass('shown');
+    }, 50);
+    remoteContainer.find('.js--accept-call').on('click', function() {
+      isHostAgreed = true;
+      remoteContainer.find('.videos__text-container').remove();
+      socket.emit('host is agreed', room);
+    })
+  } else {
+    isStarted = true;
+    isChannelReady = false;
+  }
+})
 
 socket.on('created', function(room) {
   console.log('Created room ' + room);
@@ -49,12 +87,14 @@ socket.on('full', function(room) {
 socket.on('join', function (room){
   console.log('Another peer made a request to join room ' + room);
   console.log('This peer is the initiator of room ' + room + '!');
+  // debugger;
   isChannelReady = true;
 });
 
 socket.on('joined', function(room) {
   console.log('joined: ' + room);
   isChannelReady = true;
+  // debugger;
 });
 
 socket.on('log', function(array) {
@@ -98,7 +138,7 @@ var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
 navigator.mediaDevices.getUserMedia({
-  audio: false,
+  audio: true,
   video: true
 })
 .then(gotStream)
@@ -108,6 +148,10 @@ navigator.mediaDevices.getUserMedia({
 
 function gotStream(stream) {
   console.log('Adding local stream.');
+  if (isError) {
+    return false;
+  }
+  
   localVideo.src = window.URL.createObjectURL(stream);
   localStream = stream;
   sendMessage('got user media');
@@ -118,7 +162,7 @@ function gotStream(stream) {
 
 var constraints = {
   video: true,
-  audio: false
+  audio: true
 };
 
 console.log('Getting user media with constraints', constraints);
@@ -130,17 +174,21 @@ if (location.hostname !== 'localhost') {
 }
 
 function maybeStart() {
+  // if (!isHostAgreed) {
+  //   return false;
+  // }
+  // debugger;
   console.log('>>>>>>> maybeStart() ', isStarted, localStream, isChannelReady);
-  if (!isStarted && typeof localStream !== 'undefined' && isChannelReady) {
+
+    if (!isStarted && typeof localStream !== 'undefined' && isChannelReady) {
     console.log('>>>>>> creating peer connection');
     createPeerConnection();
     pc.addStream(localStream);
     isStarted = true;
     console.log('isInitiator', isInitiator);
-    if (isInitiator) {
       doCall();
-    }
   }
+  
 }
 
 window.onbeforeunload = function() {
@@ -150,6 +198,7 @@ window.onbeforeunload = function() {
 /////////////////////////////////////////////////////////
 
 function createPeerConnection() {
+  // debugger;
   try {
     pc = new RTCPeerConnection(null);
     pc.onicecandidate = handleIceCandidate;
@@ -178,9 +227,17 @@ function handleIceCandidate(event) {
 }
 
 function handleRemoteStreamAdded(event) {
-  console.log('Remote stream added.');
-  remoteVideo.src = window.URL.createObjectURL(event.stream);
-  remoteStream = event.stream;
+    function ex() {
+    console.log('Remote stream added.');
+    remoteVideo.src = window.URL.createObjectURL(event.stream);
+    remoteStream = event.stream;
+  }
+
+  socket.on('host agreed', function() {
+    fullHeight();
+    ex();
+  });
+  
 }
 
 function handleCreateOfferError(event) {
@@ -193,19 +250,24 @@ function doCall() {
 }
 
 function doAnswer() {
-  console.log('Sending answer to peer.');
-  pc.createAnswer().then(
-    setLocalAndSendMessage,
-    onCreateSessionDescriptionError
-  );
+
+
+    console.log('Sending answer to peer.');
+    pc.createAnswer().then(
+      setLocalAndSendMessage,
+      onCreateSessionDescriptionError
+    );
+
 }
 
 function setLocalAndSendMessage(sessionDescription) {
   // Set Opus as the preferred codec in SDP if Opus is present.
   //  sessionDescription.sdp = preferOpus(sessionDescription.sdp);
+  
   pc.setLocalDescription(sessionDescription);
   console.log('setLocalAndSendMessage sending message', sessionDescription);
   sendMessage(sessionDescription);
+
 }
 
 function onCreateSessionDescriptionError(error) {
@@ -242,9 +304,16 @@ function requestTurn(turnURL) {
 }
 
 function handleRemoteStreamAdded(event) {
-  console.log('Remote stream added.');
-  remoteVideo.src = window.URL.createObjectURL(event.stream);
-  remoteStream = event.stream;
+  function ex() {
+
+    console.log('Remote stream added.');
+    remoteVideo.src = window.URL.createObjectURL(event.stream);
+    remoteStream = event.stream;
+  }
+
+  socket.on('host agreed', function() {
+    ex();
+  })
 }
 
 function handleRemoteStreamRemoved(event) {

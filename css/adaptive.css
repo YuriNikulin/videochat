@@ -1,0 +1,15 @@
+@media (max-width: 768px) {
+	.toolbar-input__input {
+		width: 100%;
+	}
+
+	.toolbar-popup .toolbar__btn {
+		border: none;
+		outline: 1px solid #eee;
+	}
+
+	.videos__local {
+		max-width: 150px;
+		max-height: 150px;
+	}
+}
