@@ -39,7 +39,7 @@ fullHeight();
 function redirectToChat() {
 	var oldHref = window.location.href;
 	console.log(document.cookie);
-	window.location = '/test.html';
+	window.location = '/chat.html';
 }
 
 function redirectToHomepage() {
