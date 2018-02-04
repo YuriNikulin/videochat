@@ -15,8 +15,116 @@ var io = require('socket.io')(http);
 var publicPath = path.resolve(__dirname, './');
 app.use(express.static(publicPath));
 app.get('/', function(req, res){
- res.sendFile('socket.html', {root: publicPath});
+    res.sendFile('socket.html', {root: publicPath});
 });
 
 На этом код, отвечающий за работу локального сервера, заканчивается. Начинается работа с серверной частью socket.io. Обрабатываются различные события, вызываемые действиями пользователей.
-Пользователь, перейдя по адресу приложения, видит страницу index.html. Элементы страницы стилизованы с помощью css, для простой интерфейсной логики используется jquery, находящийся в файлах script.js и ui.js, которые подключаются в index.html. При нажатии на кнопку Create a new room появляется поле ввода для имени комнаты. 
+Пользователь, перейдя по адресу приложения, видит страницу index.html. Элементы страницы стилизованы с помощью css, для простой интерфейсной логики используется jquery, находящийся в файлах script.js и ui.js, которые подключаются в index.html. При нажатии на кнопку Create a new room появляется поле ввода для имени комнаты. Предполагается, что после ввода имени комнаты пользователь нажмёт Create. Произойдёт вызов функции createRoom. Она возьмёт введённое имя комнаты и сохранит его в cookie пользователя. Кроме того, в данной функции будет осуществлена проверка на пустоту поля ввода. 
+
+function createRoom(container) {
+	var input = container.find('.create-room__input'),
+		roomName = input.val();
+	if (!roomName) {
+		showLocalError(container, 'You need to enter a name for your room');
+		return false;
+	}
+	document.cookie = 'room=' + roomName;
+	redirectToChat();
+}
+
+После вызывается функция redirectToChat, которая перенаправляет пользователя на страницу с видеочатом (chat.html). В chat.html имеется два video HTML-элемента. В один из них, с идентификатором localVideo, будет транслироваться видео с собственной камеры клиента (при условии, что у него есть камера, и что браузер дал приложению доступ к камере, что происходит не всегда, например, браузер Google Chrome запрещает доступ к камере для сайтов без https). В элемент с идентификатором remoteVideo будет транслироваться видео с камеры собеседника, когда собеседник будет найден. На странице chat.html подключаются скрипты socket.io.js (для клиентской реализации socket.io), adapter.js, main.js - для работы с WebRTC. Ключевой скрипт будет выполняться в main.js.
+В main.js задаются начальные значения переменных, необходимые для логики приложения. В переменной pcConfig указывается STUN сервер:
+
+var pcConfig = {
+  'iceServers': [{
+    'urls': 'stun:stun.l.google.com:19302'
+  }]
+};
+
+В переменной sdpConstraints указывается, что при обмене SDP (Session Description Protocol) пиры буду обмениваться видео и аудио.
+
+var sdpConstraints = {
+    offerToReceiveAudio: true,
+    offerToReceiveVideo: true
+};
+
+Из cookie с помощью простого регулярного выражения берётся имя комнаты (введённое ранее на странице index.html). Имя комнаты показывается на странице. Если имени нет, показывается ошибка.
+
+var room;
+var roomTitle = $('.room-name');
+var roomName = document.cookie.match( /room=(.*)/);
+if (roomName) {
+  roomName = roomName[1];
+  roomTitle.html(roomTitle.html() + ' ' + roomName);
+}
+
+else {
+  isError = true;
+  showLocalError(roomTitle, 'You haven\'t selected a room name, you can return to homepage and choose one in order to create a new room or join existing', 'pos-relative');
+}
+
+Происходит инициализация socket.io
+
+var socket = io.connect();
+
+Тригеррится событие main check. Его главной целью является обмен имени комнаты между двумя пользователями. 
+
+socket.emit('main check', room);
+
+В серверной части это событие обрабатывается и тригеррится событие main check answer.
+
+socket.on('main check', function(room) {
+	socket.broadcast.emit('main check answer', room);
+})
+
+В клиентской части main check answer обрабатывается.
+
+socket.on('main check answer', function(remoteRoom) {
+  if (remoteRoom == room) {
+    isStarted = false;
+    isChannelReady = true;
+    var remoteContainer = $('.videos__remote');
+    remoteContainer.find('.videos__text-container').remove();
+    remoteContainer.append('<div class="videos__text-container"><span class="videos__span videos__text">Some user is calling you</span><span class="videos__text ui videos__btn js--accept-call">Accept</span></div>');
+    setTimeout(function() {
+      remoteContainer.find('.videos__text-container').addClass('shown');
+    }, 50);
+    remoteContainer.find('.js--accept-call').on('click', function() {
+      isHostAgreed = true;
+      remoteContainer.find('.videos__text-container').remove();
+      socket.emit('host is agreed', room);
+    })
+  } else {
+    isStarted = true;
+    isChannelReady = false;
+  }
+})
+
+Таким образом, если второй пользователь хочет подключиться к существующей комнате, создатель комнаты видит уведомление, что к нему хотят подлючиться. Так как в данный момент remoteRoom != room, данный код не сработает, он сработает, когда к создателю комнаты захочет подключиться другой пользователь.
+Далее происходит захват изображения с локальной камеры с помощью getUserMedia.
+
+var localVideo = document.querySelector('#localVideo');
+navigator.mediaDevices.getUserMedia({
+  audio: true,
+  video: true
+})
+.then(gotStream)
+.catch(function(e) {
+  alert('Error: ' + e.name);
+});
+
+function gotStream(stream) {
+  if (isError) {
+    return false;
+  }
+  
+  localVideo.src = window.URL.createObjectURL(stream);
+  localStream = stream;
+  if (isInitiator) {
+    maybeStart();
+  }
+}
+
+На этом выполнение JavaScript у пользователя, создавшего комнату, заканчивается, и ему остаётся ждать, когда в его комнату подключится другой пользователь.
+Допустим, подключается второй пользователь. Он вводит имя комнаты, и в это время в комнате с таким же именем первый пользователь ждёт собеседника. Второй пользователь перенаправляется на chat.html, где захватывается изображение с его камеры. В это время у первого пользователя срабатывает событие main check answer, в этот раз remoteRoom == room, поэтому код внутри условия выполняется. С помощью JavaScript первому пользователю показывается уведомление, что к нему хотят подключиться. Нажав на кнопку accept, первый пользователь  инициирует передачу на сервер сообщения host is agreed, 
+
