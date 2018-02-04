@@ -6,11 +6,10 @@ var io = require('socket.io')(http);
 
 var publicPath = path.resolve(__dirname, './');
 
-
- app.use(express.static(publicPath));
- app.get('/', function(req, res){
-     res.sendFile('socket.html', {root: publicPath});
- });
+app.use(express.static(publicPath));
+app.get('/', function(req, res){
+ res.sendFile('socket.html', {root: publicPath});
+});
 
 io.on('connection', function(socket){
 	console.log('a user connected');
