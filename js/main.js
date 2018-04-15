@@ -249,15 +249,6 @@ function doCall() {
   pc.createOffer(setLocalAndSendMessage, handleCreateOfferError);
 }
 
-function setBandwidth(sdp) {
-  var audioBandwidth = 30;
-  var videoBandwidth = 256;
-  
-    sdp = sdp.replace(/a=mid:audio\r\n/g, 'a=mid:audio\r\nb=AS:' + audioBandwidth + '\r\n');
-    sdp = sdp.replace(/a=mid:video\r\n/g, 'a=mid:video\r\nb=AS:' + videoBandwidth + '\r\n');
-    return sdp;
-}
-
 function doAnswer() {
 
 
@@ -272,7 +263,7 @@ function doAnswer() {
 function setLocalAndSendMessage(sessionDescription) {
   // Set Opus as the preferred codec in SDP if Opus is present.
   //  sessionDescription.sdp = preferOpus(sessionDescription.sdp);
-  // sessionDescription.sdp = setBandwidth(sessionDescription.sdp);
+  
   pc.setLocalDescription(sessionDescription);
   console.log('setLocalAndSendMessage sending message', sessionDescription);
   sendMessage(sessionDescription);
