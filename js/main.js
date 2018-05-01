@@ -20,6 +20,19 @@ var pcConfig = {
   }]
 };
 
+var stunServers = {
+  'iceServers': 
+    [
+      {"urls":["stun:64.233.165.127:19302","stun:[2A00:1450:4010:C08::7F]:19302"]},
+      {"urls":["turn:64.233.165.127:19305?transport=udp",
+      "turn:[2A00:1450:4010:C01::7F]:19305?transport=udp",
+      "turn:64.233.165.127:19305?transport=tcp",
+      "turn:[2A00:1450:4010:C01::7F]:19305?transport=tcp"],
+      "username":"CLnTpdcFEga2qzPOoNIYzc/s6OMTIICjBQ",
+      "credential":"B1U7gONzEu4v3c/VmZzbEEJktE4="}
+    ],
+}
+
 
 // Set up audio and video regardless of what devices are present.
 var sdpConstraints = {
@@ -198,7 +211,7 @@ window.onbeforeunload = function() {
 function createPeerConnection() {
   // debugger;
   try {
-    pc = new RTCPeerConnection(null);
+    pc = new RTCPeerConnection(stunServers);
     pc.onicecandidate = handleIceCandidate;
     pc.onaddstream = handleRemoteStreamAdded;
     pc.onremovestream = handleRemoteStreamRemoved;
