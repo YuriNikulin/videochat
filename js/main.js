@@ -28,8 +28,8 @@ var stunServers = {
       "turn:[2A00:1450:4010:C01::7F]:19305?transport=udp",
       "turn:64.233.165.127:19305?transport=tcp",
       "turn:[2A00:1450:4010:C01::7F]:19305?transport=tcp"],
-      "username":"CLnTpdcFEga2qzPOoNIYzc/s6OMTIICjBQ",
-      "credential":"B1U7gONzEu4v3c/VmZzbEEJktE4="}
+      "username":"CKCQptcFEgYTVi7gAeIYzc/s6OMTIICjBQ",
+      "credential":"Dh/UKNOT2hH0r6FZyeiv0e7fS2M="}
     ],
 }
 
