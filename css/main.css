@@ -1,5 +1,69 @@
+@keyframes look-at-me {
+	0% {
+		transform: rotateZ(0);
+	}
+
+	25% {
+		transform: rotateZ(5deg);
+	}
+
+	50% {
+		transform: rotateZ(0deg);
+	}
+
+	75% {
+		transform: rotateZ(-5deg);
+	}
+
+	100% {
+		transform: rotateZ(0);
+	}
+}
+
+h1,h2 {
+	margin: 0;
+}
+
 body {
   font-family: sans-serif;
+  color: #3A261B;
+  font-size: 15px;
+}
+
+body.black {
+	background: #000;
+}
+
+.header {
+	padding-top: 15px;
+	padding-bottom: 15px;
+}
+
+.header .toolbar {
+	margin-bottom: 15px;
+}
+
+.header.white {
+	background: #fff;
+}
+
+
+input,
+button,
+textarea {
+	border: none;
+	background: none;
+}
+
+a:focus, a:active,
+input:focus, input:active,
+button:focus, button:active,
+textarea:focus, textarea:active {
+	outline: none;
+}
+
+* {
+	box-sizing: border-box;
 }
 
 video {
@@ -7,3 +71,131 @@ video {
   width: 320px;
 }
 
+a {
+	text-decoration: none;
+	color: #1899B4;
+}
+
+a,
+button,
+input {
+	font-size: 15px;
+}
+
+.ui {
+	cursor: pointer;
+}
+
+.container {
+	max-width: 1230px;
+	padding-left: 15px;
+	padding-right: 15px;
+	margin: 0 auto;
+}
+
+.videos-container {
+	background: #000;
+	text-align: center;
+}
+
+.videos-item {
+	position: relative;
+	padding: 20px 0;
+	margin: 0 auto;
+}
+
+.videos__text {
+	font-size: 18px;
+	color: #fff;
+	display: block;
+}
+
+.videos__btn {
+	border: 1px solid #fff;
+	display: inline-block;
+	margin: 10px 0;
+	padding: 5px 15px;
+}
+
+.videos__btn:hover {
+	background: #fff;
+	color: #000;
+}
+
+.videos__text-container {
+	transition: .9s ease-in-out;
+	position: absolute;
+	width: 100%;
+	left: 0;
+	top: 50%;
+	transform: translate(0, -50%);
+	opacity: 0;
+}
+
+.videos__text-container.shown {
+	opacity: 1;
+}
+
+.toolbar {
+	position: relative;
+	border: 1px solid #eee;
+	font-size: 0;
+}
+
+.toolbar__btn {
+	padding: 10px 15px;
+	display: inline-block;
+	border-right: 1px solid #eee;
+	background: none;
+	color: #1899B4;
+}
+
+.toolbar__btn:hover {
+	background: #eee;
+}
+
+.input {
+	padding: 2px 8px;
+}
+
+.popup {
+	position: absolute;
+	z-index: 1;
+}
+
+.toolbar-popup {
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
+}
+
+.toolbar-input__input {
+	height: 100%;
+	border: none;
+	width: 50%;
+}
+
+.error {
+	background: #FAE1D2;
+	padding: 3px 10px;
+	width: 200px;
+	font-size: 12px;
+	animation: look-at-me .2s linear 1;
+}
+
+.error.pos-relative {
+	position: relative;
+}
+
+.error.shown {
+	
+}
+
+.toolbar-input.shown .toolbar-input__input {
+	background: #C8EAF1;
+}
+
+.toolbar-input__input:focus {
+	outline: none;
+}

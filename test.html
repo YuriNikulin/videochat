@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/normalize.css">
+    <link rel="stylesheet" href="css/tools.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/adaptive.css">
+</head>
+<body class="black">
+<div class="main-content">
+    <div class="header white">
+        <div class="container">
+            <div class="toolbar">
+                <a href="" class="js--home btn ui toolbar__btn">Back to homepage</a>
+            </div>
+
+            <h2 class="h2 room-name">Room</h2>
+        </div>
+    </div>
+
+    <div class="videos-container full-height">
+        <div class="videos-item videos__remote"> 
+            <video id="remoteVideo" autoplay></video>
+        </div>
+        <div class="videos-item videos__local">
+            <video id="localVideo" autoplay muted></video>
+        </div>
+    </div>
+</div>        
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/lib/jquery.min.js"></script>
+<script src="/js/script.js"></script>
+<script src="/js/ui.js"></script>
+<script src="js/lib/adapter.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

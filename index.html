@@ -1,27 +1,54 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-
-    <title>Realtime communication with WebRTC</title>
-
-    <link rel="stylesheet" href="/css/main.css" />
-
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+	<link rel="stylesheet" href="css/normalize.css">
+	<link rel="stylesheet" href="css/tools.css">
+	<link rel="stylesheet" href="css/main.css">
+	<link rel="stylesheet" href="css/adaptive.css">
 </head>
-
 <body>
-
-    <h1>Realtime communication with WebRTCSS</h1>
-
-    <div id="videos">
-        <video id="localVideo" autoplay muted></video>
-        <video id="remoteVideo" autoplay></video>
-    </div>
-
-    <script src="https://cdn.socket.io/socket.io-1.0.0.js"></script>
-    <script src="js/lib/adapter.js"></script>
-    <script src="js/main.js"></script>
-
+	<div class="main-content">
+		<div class="container header">
+			<div class="toolbar">
+				<a href="" class="btn btn--create-room-opener toolbar__btn js js--create-room-opener ui">
+					Create a new room
+				</a>
+				<div class="toolbar-input toolbar-popup toolbar-create-room hidden popup create-room">
+					<input type="text" class="toolbar-input__input input create-room__input" placeholder="Your Room's name goes here">
+					<button class="toolbar__btn btn btn--create-room js--create-room ui">
+						Create
+					</button>
+					<a class="toolbar__btn js--popup-closer icon popup__close ui">
+						Close
+					</a>
+					<div class="popup error">
+						If room with entered name exists you will join it. Otherwise room with entered name will be created.
+					</div>
+				</div>
+			</div>
+			<div class="rooms">
+			</div>
+		</div>
+	</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/lib/jquery.min.js"></script>
+<script src="/js/script.js"></script>
+<script src="/js/ui.js"></script>
+	<script>
+		$(function() {
+			var socket = io();
+			$('form').submit(function() {
+				socket.emit('chat message', $('#m').val());
+				$('#m').val('');
+				return false;
+			});
+			socket.on('chat message', function(msg) {
+				$('#messages').append($('<li>').text(msg));
+			});
+		});
+	</script>	
 </body>
-
 </html>

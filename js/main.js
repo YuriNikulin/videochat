@@ -3,39 +3,90 @@
 var isChannelReady = false;
 var isInitiator = false;
 var isStarted = false;
+var isInitiatorCustom = true;
 var localStream;
 var pc;
 var remoteStream;
 var turnReady;
+var isError = false;
+var isHostAgreed = false;
+var remoteRoomName;
+
+
 
 var pcConfig = {
   'iceServers': [{
-    'urls': 'stun:stun.l.google.com:19302'
+    
   }]
 };
+
+var stunServers = {
+  'iceServers': 
+    [
+      {"urls":["stun:64.233.165.127:19302","stun:[2A00:1450:4010:C08::7F]:19302"]},
+      {"urls":["turn:64.233.165.127:19305?transport=udp",
+      "turn:[2A00:1450:4010:C01::7F]:19305?transport=udp",
+      "turn:64.233.165.127:19305?transport=tcp",
+      "turn:[2A00:1450:4010:C01::7F]:19305?transport=tcp"],
+      "username":"CKCQptcFEgYTVi7gAeIYzc/s6OMTIICjBQ",
+      "credential":"Dh/UKNOT2hH0r6FZyeiv0e7fS2M="}
+    ],
+}
 
 
 // Set up audio and video regardless of what devices are present.
 var sdpConstraints = {
-  offerToReceiveAudio: false,
+  offerToReceiveAudio: true,
   offerToReceiveVideo: true
 };
 
-console.log(sdpConstraints.offerToReceiveAudio);
-/////////////////////////////////////////////
 
-var room = 'foo';
+var room;
+var roomTitle = $('.room-name');
+var roomName = document.cookie.match( /room=(.*)/);
+if (roomName) {
+  roomName = roomName[1];
+  roomTitle.html(roomTitle.html() + ' ' + roomName);
+}
+
+else {
+  isError = true;
+  showLocalError(roomTitle, 'You haven\'t selected a room name, you can return to homepage and choose one in order to create a new room or join existing', 'pos-relative');
+}
+
+room = roomName;
+console.log(room);
 // Could prompt for room name:
 // room = prompt('Enter room name:');
-alert('TESTBEFORE???');
 var socket = io.connect();
-alert(socket);
 
+socket.emit('main check', room);
 
-if (room !== '') {
+if (room !== '' && !isError) {
   socket.emit('create or join', room);
   console.log('Attempted to create or  join room', room);
 }
+
+socket.on('main check answer', function(remoteRoom) {
+  if (remoteRoom == room) {
+    isStarted = false;
+    isChannelReady = true;
+    var remoteContainer = $('.videos__remote');
+    remoteContainer.find('.videos__text-container').remove();
+    remoteContainer.append('<div class="videos__text-container"><span class="videos__span videos__text">Some user is calling you</span><span class="videos__text ui videos__btn js--accept-call">Accept</span></div>');
+    setTimeout(function() {
+      remoteContainer.find('.videos__text-container').addClass('shown');
+    }, 50);
+    remoteContainer.find('.js--accept-call').on('click', function() {
+      isHostAgreed = true;
+      remoteContainer.find('.videos__text-container').remove();
+      socket.emit('host is agreed', room);
+    })
+  } else {
+    isStarted = true;
+    isChannelReady = false;
+  }
+})
 
 socket.on('created', function(room) {
   console.log('Created room ' + room);
@@ -49,12 +100,14 @@ socket.on('full', function(room) {
 socket.on('join', function (room){
   console.log('Another peer made a request to join room ' + room);
   console.log('This peer is the initiator of room ' + room + '!');
+  // debugger;
   isChannelReady = true;
 });
 
 socket.on('joined', function(room) {
   console.log('joined: ' + room);
   isChannelReady = true;
+  // debugger;
 });
 
 socket.on('log', function(array) {
@@ -98,16 +151,20 @@ var localVideo = document.querySelector('#localVideo');
 var remoteVideo = document.querySelector('#remoteVideo');
 
 navigator.mediaDevices.getUserMedia({
-  audio: false,
+  audio: true,
   video: true
 })
 .then(gotStream)
 .catch(function(e) {
-  alert('durak ' + e.name);
+  // alert('Error: ' + e.name);
 });
 
 function gotStream(stream) {
   console.log('Adding local stream.');
+  if (isError) {
+    return false;
+  }
+  
   localVideo.src = window.URL.createObjectURL(stream);
   localStream = stream;
   sendMessage('got user media');
@@ -118,29 +175,31 @@ function gotStream(stream) {
 
 var constraints = {
   video: true,
-  audio: false
+  audio: true
 };
 
 console.log('Getting user media with constraints', constraints);
 
 if (location.hostname !== 'localhost') {
-  requestTurn(
-    'https://computeengineondemand.appspot.com/turn?username=41784574&key=4080218913'
-  );
+
 }
 
 function maybeStart() {
+  // if (!isHostAgreed) {
+  //   return false;
+  // }
+  // debugger;
   console.log('>>>>>>> maybeStart() ', isStarted, localStream, isChannelReady);
-  if (!isStarted && typeof localStream !== 'undefined' && isChannelReady) {
+
+    if (!isStarted && typeof localStream !== 'undefined' && isChannelReady) {
     console.log('>>>>>> creating peer connection');
     createPeerConnection();
     pc.addStream(localStream);
     isStarted = true;
     console.log('isInitiator', isInitiator);
-    if (isInitiator) {
       doCall();
-    }
   }
+  
 }
 
 window.onbeforeunload = function() {
@@ -150,8 +209,9 @@ window.onbeforeunload = function() {
 /////////////////////////////////////////////////////////
 
 function createPeerConnection() {
+  // debugger;
   try {
-    pc = new RTCPeerConnection(null);
+    pc = new RTCPeerConnection(stunServers);
     pc.onicecandidate = handleIceCandidate;
     pc.onaddstream = handleRemoteStreamAdded;
     pc.onremovestream = handleRemoteStreamRemoved;
@@ -178,9 +238,17 @@ function handleIceCandidate(event) {
 }
 
 function handleRemoteStreamAdded(event) {
-  console.log('Remote stream added.');
-  remoteVideo.src = window.URL.createObjectURL(event.stream);
-  remoteStream = event.stream;
+    function ex() {
+    console.log('Remote stream added.');
+    remoteVideo.src = window.URL.createObjectURL(event.stream);
+    remoteStream = event.stream;
+  }
+
+  socket.on('host agreed', function() {
+    fullHeight();
+    ex();
+  });
+  
 }
 
 function handleCreateOfferError(event) {
@@ -193,19 +261,24 @@ function doCall() {
 }
 
 function doAnswer() {
-  console.log('Sending answer to peer.');
-  pc.createAnswer().then(
-    setLocalAndSendMessage,
-    onCreateSessionDescriptionError
-  );
+
+
+    console.log('Sending answer to peer.');
+    pc.createAnswer().then(
+      setLocalAndSendMessage,
+      onCreateSessionDescriptionError
+    );
+
 }
 
 function setLocalAndSendMessage(sessionDescription) {
   // Set Opus as the preferred codec in SDP if Opus is present.
   //  sessionDescription.sdp = preferOpus(sessionDescription.sdp);
+  
   pc.setLocalDescription(sessionDescription);
   console.log('setLocalAndSendMessage sending message', sessionDescription);
   sendMessage(sessionDescription);
+
 }
 
 function onCreateSessionDescriptionError(error) {
@@ -214,13 +287,6 @@ function onCreateSessionDescriptionError(error) {
 
 function requestTurn(turnURL) {
   var turnExists = false;
-  for (var i in pcConfig.iceServers) {
-    if (pcConfig.iceServers[i].url.substr(0, 5) === 'turn:') {
-      turnExists = true;
-      turnReady = true;
-      break;
-    }
-  }
   if (!turnExists) {
     console.log('Getting TURN server from ', turnURL);
     // No TURN server. Get one from computeengineondemand.appspot.com:
@@ -242,9 +308,16 @@ function requestTurn(turnURL) {
 }
 
 function handleRemoteStreamAdded(event) {
-  console.log('Remote stream added.');
-  remoteVideo.src = window.URL.createObjectURL(event.stream);
-  remoteStream = event.stream;
+  function ex() {
+
+    console.log('Remote stream added.');
+    remoteVideo.src = window.URL.createObjectURL(event.stream);
+    remoteStream = event.stream;
+  }
+
+  socket.on('host agreed', function() {
+    ex();
+  })
 }
 
 function handleRemoteStreamRemoved(event) {
